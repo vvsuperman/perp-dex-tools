@@ -20,14 +20,14 @@ class TradingLogger:
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         logs_dir = os.path.join(project_root, 'logs')
         os.makedirs(logs_dir, exist_ok=True)
+        pid = os.getpid()
+        order_file_name = f"{exchange}_{ticker}_{pid}_orders.csv"
+        debug_log_file_name = f"{exchange}_{ticker}_{pid}_activity.log"
 
-        order_file_name = f"{exchange}_{ticker}_orders.csv"
-        debug_log_file_name = f"{exchange}_{ticker}_activity.log"
-
-        account_name = os.getenv('ACCOUNT_NAME')
-        if account_name:
-            order_file_name = f"{exchange}_{ticker}_{account_name}_orders.csv"
-            debug_log_file_name = f"{exchange}_{ticker}_{account_name}_activity.log"
+        # account_name = os.getenv('ACCOUNT_NAME')
+        # if account_name:
+        #     order_file_name = f"{exchange}_{ticker}_{account_name}_orders.csv"
+        #     debug_log_file_name = f"{exchange}_{ticker}_{account_name}_activity.log"
 
         # Log file paths inside logs directory
         self.log_file = os.path.join(logs_dir, order_file_name)
@@ -37,8 +37,10 @@ class TradingLogger:
 
     def _setup_logger(self, log_to_console: bool) -> logging.Logger:
         """Setup the logger with proper configuration."""
-        logger = logging.getLogger(f"trading_bot_{self.exchange}_{self.ticker}")
-        logger.setLevel(logging.INFO)
+        pid = os.getpid()
+
+        logger = logging.getLogger(f"trading_bot_{self.exchange}_{self.ticker}_{pid}")
+        logger.setLevel(logging.DEBUG)
 
         # Prevent propagation to root logger to avoid duplicate messages
         logger.propagate = False
@@ -71,11 +73,11 @@ class TradingLogger:
         logger.addHandler(file_handler)
 
         # Console handler if requested
-        if log_to_console:
-            console_handler = logging.StreamHandler()
-            console_handler.setLevel(logging.INFO)
-            console_handler.setFormatter(formatter)
-            logger.addHandler(console_handler)
+        # if log_to_console:
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
 
         return logger
 

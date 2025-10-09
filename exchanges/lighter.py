@@ -35,16 +35,16 @@ class LighterClient(BaseExchangeClient):
         super().__init__(config)
 
         # Lighter credentials from environment
-        self.api_key_private_key = os.getenv('API_KEY_PRIVATE_KEY')
-        self.account_index = int(os.getenv('LIGHTER_ACCOUNT_INDEX', '0'))
-        self.api_key_index = int(os.getenv('LIGHTER_API_KEY_INDEX', '0'))
+        self.api_key_private_key = config.API_KEY_PRIVATE_KEY
+        self.account_index = config.LIGHTER_ACCOUNT_INDEX
+        self.api_key_index = config.LIGHTER_API_KEY_INDEX
         self.base_url = "https://mainnet.zklighter.elliot.ai"
 
         if not self.api_key_private_key:
             raise ValueError("API_KEY_PRIVATE_KEY must be set in environment variables")
 
         # Initialize logger
-        self.logger = TradingLogger(exchange="lighter", ticker=self.config.ticker, log_to_console=False)
+        self.logger = TradingLogger(exchange="lighter", ticker=self.config.ticker, log_to_console=True)
         self._order_update_handler = None
 
         # Initialize Lighter client (will be done in connect)

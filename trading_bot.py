@@ -32,6 +32,10 @@ class TradingConfig:
     stop_price: Decimal
     pause_price: Decimal
     boost_mode: bool
+    API_KEY_PRIVATE_KEY:str
+    API_KEY_PUBLIC_KEY:str
+    LIGHTER_ACCOUNT_INDEX:str
+    LIGHTER_API_KEY_INDEX:str
 
     @property
     def close_order_side(self) -> str:
@@ -61,6 +65,7 @@ class TradingBot:
     def __init__(self, config: TradingConfig):
         self.config = config
         self.logger = TradingLogger(config.exchange, config.ticker, log_to_console=True)
+        self.logger.log("Initializing...")
 
         # Create exchange client
         try:
@@ -98,9 +103,7 @@ class TradingBot:
         except Exception as e:
             self.logger.log(f"Error during graceful shutdown: {e}", "ERROR")
 
-    def _setup_websocket_handlers(self):
-        """Setup WebSocket handlers for order updates."""
-        def order_update_handler(message):
+    def order_update_handler(self,message):
             """Handle order updates from WebSocket."""
             try:
                 # Check if this is for our contract
@@ -156,9 +159,11 @@ class TradingBot:
             except Exception as e:
                 self.logger.log(f"Error handling order update: {e}", "ERROR")
                 self.logger.log(f"Traceback: {traceback.format_exc()}", "ERROR")
-
+    def _setup_websocket_handlers(self):
+        """Setup WebSocket handlers for order updates."""
+       
         # Setup order update handler
-        self.exchange_client.setup_order_update_handler(order_update_handler)
+        self.exchange_client.setup_order_update_handler(self.order_update_handler)
 
     def _calculate_wait_time(self) -> Decimal:
         """Calculate wait time between orders."""
@@ -532,6 +537,7 @@ class TradingBot:
 
                 # Periodic logging
                 mismatch_detected = await self._log_status_periodically()
+                mismatch_detected = False
 
                 stop_trading, pause_trading = await self._check_price_condition()
                 if stop_trading:
@@ -553,14 +559,17 @@ class TradingBot:
                         await asyncio.sleep(wait_time)
                         continue
                     else:
-                        meet_grid_step_condition = await self._meet_grid_step_condition()
-                        if not meet_grid_step_condition:
-                            await asyncio.sleep(1)
+                        try:
+                            meet_grid_step_condition = await self._meet_grid_step_condition()
+                            if not meet_grid_step_condition:
+                                await asyncio.sleep(1)
+                                continue
+
+                            await self._place_and_monitor_open_order()
+                            self.last_close_orders += 1
+                        except Exception as e:
+                            self.logger.log(f"meet_grid_step_condition and place open order Error: {e}", "ERROR")
                             continue
-
-                        await self._place_and_monitor_open_order()
-                        self.last_close_orders += 1
-
         except KeyboardInterrupt:
             self.logger.log("Bot stopped by user")
             await self.graceful_shutdown("User interruption (Ctrl+C)")
