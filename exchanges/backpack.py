@@ -157,8 +157,10 @@ class BackpackClient(BaseExchangeClient):
         super().__init__(config)
 
         # Backpack credentials from environment
-        self.public_key = os.getenv('BACKPACK_PUBLIC_KEY')
-        self.secret_key = os.getenv('BACKPACK_SECRET_KEY')
+        # self.public_key = os.getenv('BACKPACK_PUBLIC_KEY')
+        # self.secret_key = os.getenv('BACKPACK_SECRET_KEY')
+        self.public_key = config.BACKPACK_PUBLIC_KEY
+        self.secret_key = config.BACKPACK_SECRET_KEY
 
         if not self.public_key or not self.secret_key:
             raise ValueError("BACKPACK_PUBLIC_KEY and BACKPACK_SECRET_KEY must be set in environment variables")
@@ -552,6 +554,16 @@ class BackpackClient(BaseExchangeClient):
                 ))
 
         return orders
+    
+    async def get_account_position_entry_price(self)->Decimal:
+        """Get account positions using official SDK."""
+        positions_data = self.account_client.get_open_positions()
+        position_amt = 0
+        for position in positions_data:
+            if position.get('symbol', '') == self.config.contract_id:
+                position_amt = abs(Decimal(position.get('entryPrice', 0)))
+                break
+        return position_amt
 
     @query_retry(default_return=0)
     async def get_account_positions(self) -> Decimal:

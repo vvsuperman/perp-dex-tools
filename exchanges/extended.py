@@ -76,10 +76,16 @@ class ExtendedClient(BaseExchangeClient):
         """Initialize the exchange client with configuration."""
         super().__init__(config)
 
-        vault = os.getenv('EXTENDED_VAULT')
-        private_key = os.getenv('EXTENDED_STARK_KEY_PRIVATE')
-        public_key = os.getenv('EXTENDED_STARK_KEY_PUBLIC')
-        api_key = os.getenv('EXTENDED_API_KEY')
+        # vault = os.getenv('EXTENDED_VAULT')
+        # private_key = os.getenv('EXTENDED_STARK_KEY_PRIVATE')
+        # public_key = os.getenv('EXTENDED_STARK_KEY_PUBLIC')
+        # api_key = os.getenv('EXTENDED_API_KEY')
+        vault = config.EXTENDED_VAULT
+        private_key = config.EXTENDED_STARK_KEY_PRIVATE
+        public_key = config.EXTENDED_STARK_KEY_PUBLIC
+        api_key = config.EXTENDED_API_KEY
+        
+        
         self.api_key = api_key
 
         self.stark_account = StarkPerpetualAccount(vault=vault, private_key=private_key, public_key=public_key, api_key=api_key)
@@ -586,6 +592,32 @@ class ExtendedClient(BaseExchangeClient):
                 contract_orders.append(formatted_order)
 
         return contract_orders
+    
+    async def get_account_position_entry_price(self) -> Decimal:
+        """Get account positions."""
+        # contract_id should be market name, e.g. ETH-USD
+        positions_data = await self.perpetual_trading_client.account.get_positions(market_names=[self.config.ticker+"-USD"])
+        if not positions_data or not hasattr(positions_data, 'data'):
+            self.logger.log("No positions or failed to get positions", "WARNING")
+            position_amt = 0
+        else:
+            # The API returns positions under data
+            positions = positions_data.data
+            if positions:
+                # Find position for current contract
+                position = None
+                for p in positions:
+                    if p.market == self.config.contract_id:
+                        position = p
+                        break
+
+                if position:
+                    position_amt = abs(Decimal(position.open_price))
+                else:
+                    position_amt = 0
+            else:
+                position_amt = 0
+        return position_amt
 
     async def get_account_positions(self) -> Decimal:
         """Get account positions."""

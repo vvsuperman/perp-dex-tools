@@ -65,10 +65,10 @@ class ParadexClient(BaseExchangeClient):
         self.config = config
 
         # Paradex credentials from environment - L1 address + L2 private key
-        self.l1_address = os.getenv('PARADEX_L1_ADDRESS')
-        self.l2_private_key_hex = os.getenv('PARADEX_L2_PRIVATE_KEY')
-        self.l2_address = os.getenv('PARADEX_L2_ADDRESS')
-        self.environment = os.getenv('PARADEX_ENVIRONMENT', 'prod')
+        self.l1_address = config.PARADEX_L1_ADDRESS
+        self.l2_private_key_hex = config.PARADEX_L2_PRIVATE_KEY
+        self.l2_address = config.PARADEX_L2_ADDRESS
+        self.environment =  'prod'
 
         # Validate that required credentials are provided
         if not self.l1_address:
@@ -333,7 +333,7 @@ class ParadexClient(BaseExchangeClient):
             market=contract_id,
             order_type=OrderType.Limit,
             order_side=side,
-            size=quantity.quantize(self.order_size_increment, rounding=ROUND_HALF_UP),
+            size=Decimal(quantity).quantize(self.order_size_increment, rounding=ROUND_HALF_UP),
             limit_price=price,
             instruction="POST_ONLY"
         )
@@ -573,6 +573,23 @@ class ParadexClient(BaseExchangeClient):
             raise ValueError("Failed to get positions")
 
         return positions_response['results']
+    
+    async def get_account_position_entry_price(self) -> Decimal:
+        """Get account positions using official SDK."""
+        # Get account info which includes positions
+        positions = await self._fetch_positions_with_retry()
+
+        # Find position for current market
+        for position in positions:
+            if isinstance(position, dict) and position.get('market') == self.config.contract_id and position.get('status') == 'OPEN':
+                if position.get('side') == 'LONG' and self.config.direction == 'sell':
+                    raise ValueError("Long position found for sell direction")
+                elif position.get('side') == 'SHORT' and self.config.direction == 'buy':
+                    raise ValueError("Short position found for buy direction")
+
+                return abs(Decimal(position.get('average_entry_price', 0)).quantize(self.order_size_increment, rounding=ROUND_HALF_UP))
+
+        return Decimal(0)
 
     async def get_account_positions(self) -> Decimal:
         """Get account positions using official SDK."""
@@ -655,7 +672,7 @@ class ParadexClient(BaseExchangeClient):
             self.logger.log("Failed to get min quantity", "ERROR")
             raise ValueError("Failed to get min quantity")
 
-        order_notional = last_price * self.config.quantity
+        order_notional = last_price * Decimal(self.config.quantity)
         if order_notional < min_notional:
             self.logger.log(f"Order notional is less than min notional: {order_notional} < {min_notional}", "ERROR")
             raise ValueError(f"Order notional is less than min notional: {order_notional} < {min_notional}")

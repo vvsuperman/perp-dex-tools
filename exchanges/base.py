@@ -13,7 +13,7 @@ from tenacity import RetryCallState, retry, retry_if_exception_type, stop_after_
 def query_retry(
     default_return: Any = None,
     exception_type: Union[Type[Exception], Tuple[Type[Exception], ...]] = (Exception,),
-    max_attempts: int = 5,
+    max_attempts: int = 10,
     min_wait: float = 1,
     max_wait: float = 10,
     reraise: bool = False
@@ -64,7 +64,7 @@ class BaseExchangeClient(ABC):
     def __init__(self, config: Dict[str, Any]):
         """Initialize the exchange client with configuration."""
         self.config = config
-        self._validate_config()
+        # self._validate_config()
 
     def round_to_tick(self, price) -> Decimal:
         price = Decimal(price)
@@ -112,7 +112,10 @@ class BaseExchangeClient(ABC):
     async def get_active_orders(self, contract_id: str) -> List[OrderInfo]:
         """Get active orders for a contract."""
         pass
-
+    @abstractmethod
+    async def get_account_position_entry_price(self)->Decimal:
+         """Get account position entry price"""
+         pass
     @abstractmethod
     async def get_account_positions(self) -> Decimal:
         """Get account positions."""

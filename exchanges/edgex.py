@@ -507,6 +507,32 @@ class EdgeXClient(BaseExchangeClient):
                 ))
 
         return contract_orders
+    
+    @query_retry(default_return=0)
+    async def get_account_position_entry_price(self) -> Decimal:
+        """Get account positions using official SDK."""
+        positions_data = await self.client.get_account_positions()
+        if not positions_data or 'data' not in positions_data:
+            self.logger.log("No positions or failed to get positions", "WARNING")
+            position_amt = 0
+        else:
+            # The API returns positions under data.positionList
+            positions = positions_data.get('data', {}).get('positionList', [])
+            if positions:
+                # Find position for current contract
+                position = None
+                for p in positions:
+                    if isinstance(p, dict) and p.get('contractId') == self.config.contract_id:
+                        position = p
+                        break
+
+                if position:
+                    position_amt = abs(Decimal(position.get('entryPrice', 0)))
+                else:
+                    position_amt = 0
+            else:
+                position_amt = 0
+        return position_amt
 
     @query_retry(default_return=0)
     async def get_account_positions(self) -> Decimal:

@@ -93,34 +93,9 @@ async def main():
     # Setup logging first
     setup_logging("WARNING")
     processes = []
-    # Validate boost-mode can only be used with aster and backpack exchange
-    # if args.boost and args.exchange.lower() != 'aster' and args.exchange.lower() != 'backpack':
-    #     print(f"Error: --boost can only be used when --exchange is 'aster' or 'backpack'. "
-    #           f"Current exchange: {args.exchange}")
-    #     sys.exit(1)
-
-    # env_path = Path(args.env_file)
-    # if not env_path.exists():
-    #     print(f"Env file not find: {env_path.resolve()}")
-    #     sys.exit(1)
-    # dotenv.load_dotenv(args.env_file)
+    
     for key in Keys:
-    # Create configuration
-        # config = TradingConfig(
-        #     ticker=key.ticker.upper(),
-        #     contract_id='',  # will be set in the bot's run method
-        #     tick_size=Decimal(0),
-        #     quantity=key.quantity,
-        #     take_profit=key.take_profit,
-        #     direction=key.direction.lower(),
-        #     max_orders=key.max_orders,
-        #     wait_time=key.wait_time,
-        #     exchange=key.exchange.lower(),
-        #     grid_step=Decimal(key.grid_step),
-        #     stop_price=Decimal(key.stop_price),
-        #     pause_price=Decimal(key.pause_price),
-        #     # boost_mode=args.boost
-        # )
+    
         config = TradingConfig(
             ticker=key.get('ticker').upper(),
             contract_id='',  # will be set in the bot's run method
@@ -138,6 +113,18 @@ async def main():
             API_KEY_PUBLIC_KEY = key.get('API_KEY_PUBLIC_KEY'),
             LIGHTER_ACCOUNT_INDEX = key.get('LIGHTER_ACCOUNT_INDEX'),
             LIGHTER_API_KEY_INDEX = key.get('LIGHTER_API_KEY_INDEX'),
+            BACKPACK_PUBLIC_KEY = key.get('BACKPACK_PUBLIC_KEY'),
+            BACKPACK_SECRET_KEY = key.get('BACKPACK_SECRET_KEY'),
+            EXTENDED_VAULT = key.get('EXTENDED_VAULT'),
+            EXTENDED_STARK_KEY_PRIVATE = key.get('EXTENDED_STARK_KEY_PRIVATE'),
+            EXTENDED_STARK_KEY_PUBLIC = key.get('EXTENDED_STARK_KEY_PUBLIC'),
+            EXTENDED_API_KEY = key.get('EXTENDED_API_KEY'),
+            GRVT_TRADING_ACCOUNT_ID = key.get('GRVT_TRADING_ACCOUNT_ID'),
+            GRVT_API_KEY = key.get('GRVT_API_KEY'),
+            GRVT_PRIVATE_KEY = key.get('GRVT_PRIVATE_KEY'),
+            PARADEX_L1_ADDRESS = key.get('PARADEX_L1_ADDRESS'),
+            PARADEX_L2_ADDRESS = key.get('PARADEX_L2_ADDRESS'),
+            PARADEX_L2_PRIVATE_KEY = key.get('PARADEX_L2_PRIVATE_KEY'),
             boost_mode=False
         )
        
@@ -149,20 +136,35 @@ async def main():
                 args=(config,))
             processes.append(p)
             p.start()
-            while True:
-                # 检查进程状态（可选）
-                alive_count = sum(1 for p in processes if p.is_alive())
-                print(f"Active workers: {alive_count}/{len(processes)}")
-                
-                # 主进程可以在这里做其他工作
-                # 比如监控、日志记录、资源检查等
-                
-                time.sleep(600)  # 每600秒检查一次
+
+            time.sleep(10)
+           
                 
         except Exception as e:
             print(f"Bot execution failed: {e}")
             # The bot's run method already handles graceful shutdown
             return
+        
+        print(f"All processes started. Total: {len(processes)}")
+        
+    try:
+        while True:
+            alive_count = sum(1 for p in processes if p.is_alive())
+            print(f"Active workers: {alive_count}/{len(processes)}")
+            
+            # 检查是否有进程异常退出，可以选择重启
+            for i, p in enumerate(processes):
+                if not p.is_alive():
+                    print(f"Process {i} died, consider restarting...")
+            
+            time.sleep(600)
+    
+    except KeyboardInterrupt:
+        print("Shutting down all processes...")
+        for p in processes:
+            if p.is_alive():
+                p.terminate()
+                p.join()
 
 def run_async_function(config):
     """在子进程中运行异步函数的辅助函数"""

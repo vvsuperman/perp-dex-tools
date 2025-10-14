@@ -372,6 +372,9 @@ class LighterClient(BaseExchangeClient):
         order_price = (best_bid + best_ask) / 2
 
         active_orders = await self.get_active_orders(self.config.contract_id)
+        if active_orders is None:
+            self.logger.log("active found error", "ERROR")
+            raise ValueError("No active orders found")
         close_orders = [order for order in active_orders if order.side == self.config.close_order_side]
         for order in close_orders:
             if side == 'buy':
@@ -463,7 +466,8 @@ class LighterClient(BaseExchangeClient):
     async def get_active_orders(self, contract_id: str) -> List[OrderInfo]:
         """Get active orders for a contract using official SDK."""
         order_list = await self._fetch_orders_with_retry()
-
+        if order_list is None:
+            return []
         # Filter orders for the specific market
         contract_orders = []
         for order in order_list:
@@ -500,6 +504,17 @@ class LighterClient(BaseExchangeClient):
             raise ValueError("Failed to get positions")
 
         return account_data.accounts[0].positions
+    
+    async def get_account_position_entry_price(self) -> Decimal:
+         # Get account info which includes positions
+        positions = await self._fetch_positions_with_retry()
+
+        # Find position for current market
+        for position in positions:
+            if position.market_id == self.config.contract_id:
+                return Decimal(position.avg_entry_price)    
+
+        return None
 
     async def get_account_positions(self) -> Decimal:
         """Get account positions using official SDK."""

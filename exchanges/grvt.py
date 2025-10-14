@@ -23,10 +23,15 @@ class GrvtClient(BaseExchangeClient):
         super().__init__(config)
 
         # GRVT credentials from environment
-        self.trading_account_id = os.getenv('GRVT_TRADING_ACCOUNT_ID')
-        self.private_key = os.getenv('GRVT_PRIVATE_KEY')
-        self.api_key = os.getenv('GRVT_API_KEY')
-        self.environment = os.getenv('GRVT_ENVIRONMENT', 'prod')
+        # self.trading_account_id = os.getenv('GRVT_TRADING_ACCOUNT_ID')
+        # self.private_key = os.getenv('GRVT_PRIVATE_KEY')
+        # self.api_key = os.getenv('GRVT_API_KEY')
+        # self.environment = os.getenv('GRVT_ENVIRONMENT', 'prod')
+
+        self.trading_account_id = config.GRVT_TRADING_ACCOUNT_ID
+        self.private_key = config.GRVT_PRIVATE_KEY
+        self.api_key = config.GRVT_API_KEY
+        self.environment = "prod"
 
         if not self.trading_account_id or not self.private_key or not self.api_key:
             raise ValueError(
@@ -494,6 +499,18 @@ class GrvtClient(BaseExchangeClient):
             ))
 
         return order_list
+    
+    @query_retry(reraise=True)
+    async def get_account_position_entry_price(self) -> Decimal:
+        """Get account positions."""
+        # Get positions using GRVT SDK
+        positions = self.rest_client.fetch_positions()
+
+        for position in positions:
+            if position.get('instrument') == self.config.contract_id:
+                return abs(Decimal(position.get('entry_price', 0)))
+
+        return Decimal(0)
 
     @query_retry(reraise=True)
     async def get_account_positions(self) -> Decimal:

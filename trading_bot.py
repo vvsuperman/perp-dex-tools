@@ -36,6 +36,19 @@ class TradingConfig:
     API_KEY_PUBLIC_KEY:str
     LIGHTER_ACCOUNT_INDEX:str
     LIGHTER_API_KEY_INDEX:str
+    BACKPACK_SECRET_KEY:str
+    BACKPACK_PUBLIC_KEY:str
+    EXTENDED_API_KEY:str
+    EXTENDED_STARK_KEY_PUBLIC:str
+    EXTENDED_STARK_KEY_PRIVATE:str
+    EXTENDED_VAULT:str
+    GRVT_TRADING_ACCOUNT_ID:str
+    GRVT_PRIVATE_KEY:str
+    GRVT_API_KEY:str
+    PARADEX_L1_ADDRESS:str
+    PARADEX_L2_ADDRESS:str
+    PARADEX_L2_PRIVATE_KEY:str
+
 
     @property
     def close_order_side(self) -> str:
@@ -304,16 +317,25 @@ class TradingBot:
                         self.exchange_client.current_order.status != 'FILLED'):
                     await asyncio.sleep(0.1)
 
-                if self.exchange_client.current_order.status not in ['CANCELED', 'FILLED']:
+                if self.exchange_client.current_order.status == 'CANCELED-MARGIN-NOT-ALLOWED':
+                    self.logger.log(f"cancelling order failed status is CANCELED-MARGIN-NOT-ALLOWED, current order {self.exchange_client.current_order}")
+                    # self.order_filled_amount =   self.config.quantity,
+
+                elif self.exchange_client.current_order.status not in ['CANCELED', 'FILLED','CANCELED-MARGIN-NOT-ALLOWED']:
                     raise Exception(f"[OPEN] Error cancelling order: {self.exchange_client.current_order.status}")
+                
                 else:
                     self.order_filled_amount = self.exchange_client.current_order.filled_size
             else:
                 try:
                     cancel_result = await self.exchange_client.cancel_order(order_id)
                     if not cancel_result.success:
+                        # self.logger.log(f"[CLOSE] Failed to cancel order {order_id}: {cancel_result.error_message}")
+                        if self.config.exchange == "paradex"  :
+                            if 'ORDER_IS_CLOSED' in cancel_result.error_message:
+                                self.logger.log(f"paradex order maybe already filled: {cancel_result}")
+                                self.order_filled_amount = self.config.quantity
                         self.order_canceled_event.set()
-                        self.logger.log(f"[CLOSE] Failed to cancel order {order_id}: {cancel_result.error_message}", "WARNING")
                     else:
                         self.current_order_status = "CANCELED"
 
@@ -405,6 +427,18 @@ class TradingBot:
                     error_message += f"current position: {position_amt} | active closing amount: {active_close_amount} | "f"Order quantity: {len(self.active_close_orders)}\n"
                     error_message += "###### ERROR ###### ERROR ###### ERROR ###### ERROR #####\n"
                     self.logger.log(error_message, "ERROR")
+
+                    # get the entry price of current position, then place a close order
+                    
+                    if position_amt > active_close_amount:
+                        entry_price = await self.exchange_client.get_account_position_entry_price()
+                        close_price  =  entry_price - entry_price * Decimal(0.01)
+                        close_amount =  position_amt - active_close_amount
+                        self.logger.log(f"position_amt > active_close_amount, try to reblance , put a close order at price:{close_price}, amount:{close_amount} ")
+                        await self.exchange_client.place_close_order(self.config.contract_id, close_amount, close_price, "sell")
+
+
+
 
                     await self.send_notification(error_message.lstrip())
 
@@ -524,7 +558,10 @@ class TradingBot:
             while not self.shutdown_requested:
                 # Update active orders
                 active_orders = await self.exchange_client.get_active_orders(self.config.contract_id)
-
+                if active_orders is None:
+                    self.log.log(" active orders found error...continue")
+                    time.sleep(5)  
+                    continue
                 # Filter close orders
                 self.active_close_orders = []
                 for order in active_orders:
@@ -569,6 +606,7 @@ class TradingBot:
                             self.last_close_orders += 1
                         except Exception as e:
                             self.logger.log(f"meet_grid_step_condition and place open order Error: {e}", "ERROR")
+                            time.sleep(20)
                             continue
         except KeyboardInterrupt:
             self.logger.log("Bot stopped by user")
@@ -576,8 +614,9 @@ class TradingBot:
         except Exception as e:
             self.logger.log(f"Critical error: {e}", "ERROR")
             self.logger.log(f"Traceback: {traceback.format_exc()}", "ERROR")
-            await self.graceful_shutdown(f"Critical error: {e}")
-            raise
+            # await self.graceful_shutdown(f"Critical error: {e}")
+            
+            # raise
         finally:
             # Ensure all connections are closed even if graceful shutdown fails
             try:
