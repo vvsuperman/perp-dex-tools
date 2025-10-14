@@ -93,6 +93,11 @@ async def main():
     # Setup logging first
     setup_logging("WARNING")
     processes = []
+
+    # List to store (process, config) pairs
+    process_config_pairs = []
+    max_restarts = 5  # Limit restarts per process
+    restart_counts = {}  # Track restart attempts per process index
     
     for key in Keys:
     
@@ -131,33 +136,41 @@ async def main():
         # Create and run the bot
      
         try:
-            # await bot.run()
             p = multiprocessing.Process(target=run_async_function, 
-                args=(config,))
-            processes.append(p)
+                                    args=(config,))
+            # Store process and config as a tuple
+            process_config_pairs.append((p, config))
+            restart_counts[len(process_config_pairs) - 1] = 0  # Initialize restart count
             p.start()
-
             time.sleep(10)
-           
-                
         except Exception as e:
-            print(f"Bot execution failed: {e}")
-            # The bot's run method already handles graceful shutdown
+            print(f"Bot execution failed for {config.ticker}: {e}")
             return
-        
-        print(f"All processes started. Total: {len(processes)}")
-        
+
+        print(f"All processes started. Total: {len(process_config_pairs)}")
+
     try:
         while True:
-            alive_count = sum(1 for p in processes if p.is_alive())
-            print(f"Active workers: {alive_count}/{len(processes)}")
+            alive_count = sum(1 for p, _ in process_config_pairs if p.is_alive())
+            print(f"Active workers: {alive_count}/{len(process_config_pairs)}")
             
-            # 检查是否有进程异常退出，可以选择重启
-            for i, p in enumerate(processes):
+            # Check for dead processes and restart them
+            for i, (p, config) in enumerate(process_config_pairs):
                 if not p.is_alive():
-                    print(f"Process {i} died, consider restarting...")
-            
+                    print(f"Process {i} for {config.ticker} died, exit code: {p.exitcode}")
+                    if restart_counts.get(i, 0) < max_restarts:
+                        print(f"Restarting process {i} for {config.ticker}...")
+                        p.join()  # Clean up the dead process
+                        new_process = multiprocessing.Process(target=run_async_function, 
+                                                            args=(config,))
+                        process_config_pairs[i] = (new_process, config)  # Update with new process
+                        restart_counts[i] = restart_counts.get(i, 0) + 1
+                        new_process.start()
+                    else:
+                        print(f"Process {i} for {config.ticker} reached max restarts ({max_restarts}). Not restarting.")
+
             time.sleep(600)
+   
     
     except KeyboardInterrupt:
         print("Shutting down all processes...")
