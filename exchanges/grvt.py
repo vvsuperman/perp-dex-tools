@@ -48,7 +48,7 @@ class GrvtClient(BaseExchangeClient):
         self.env = env_map.get(self.environment.lower(), GrvtEnv.PROD)
 
         # Initialize logger
-        self.logger = TradingLogger(exchange="grvt", ticker=self.config.ticker, log_to_console=False)
+        self.logger = TradingLogger(exchange="grvt", ticker=self.config.ticker,id=config.id, log_to_console=False)
 
         # Initialize GRVT clients
         self._initialize_grvt_clients()
@@ -338,6 +338,7 @@ class GrvtClient(BaseExchangeClient):
                 order_info = await self.place_post_only_order(contract_id, quantity, order_price, direction)
             except Exception as e:
                 self.logger.log(f"[OPEN] Error placing order: {e}", "ERROR")
+                
                 continue
 
             order_status = order_info.status

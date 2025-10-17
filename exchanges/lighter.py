@@ -44,7 +44,7 @@ class LighterClient(BaseExchangeClient):
             raise ValueError("API_KEY_PRIVATE_KEY must be set in environment variables")
 
         # Initialize logger
-        self.logger = TradingLogger(exchange="lighter", ticker=self.config.ticker, log_to_console=True)
+        self.logger = TradingLogger(exchange="lighter", ticker=self.config.ticker, id=self.config.id, log_to_console=True)
         self._order_update_handler = None
 
         # Initialize Lighter client (will be done in connect)

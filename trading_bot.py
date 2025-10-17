@@ -48,6 +48,7 @@ class TradingConfig:
     PARADEX_L1_ADDRESS:str
     PARADEX_L2_ADDRESS:str
     PARADEX_L2_PRIVATE_KEY:str
+    id:int
 
 
     @property
@@ -74,10 +75,10 @@ class OrderMonitor:
 
 class TradingBot:
     """Modular Trading Bot - Main trading logic supporting multiple exchanges."""
-
+ 
     def __init__(self, config: TradingConfig):
         self.config = config
-        self.logger = TradingLogger(config.exchange, config.ticker, log_to_console=True)
+        self.logger = TradingLogger(config.exchange, config.ticker, config.id,log_to_console=True)
         self.logger.log("Initializing...")
 
         # Create exchange client
@@ -462,7 +463,7 @@ class TradingBot:
         if self.active_close_orders:
             picker = min if self.config.direction == "buy" else max
             next_close_order = picker(self.active_close_orders, key=lambda o: o["price"])
-            next_close_price = next_close_order["price"]
+            latest_close_price = next_close_order["price"]
 
             best_bid, best_ask = await self.exchange_client.fetch_bbo_prices(self.config.contract_id)
             if best_bid <= 0 or best_ask <= 0 or best_bid >= best_ask:
@@ -470,13 +471,13 @@ class TradingBot:
 
             if self.config.direction == "buy":
                 new_order_close_price = best_ask * (1 + self.config.take_profit/100)
-                if next_close_price / new_order_close_price > 1 + self.config.grid_step/100:
+                if latest_close_price / new_order_close_price > 1:
                     return True
                 else:
                     return False
             elif self.config.direction == "sell":
                 new_order_close_price = best_bid * (1 - self.config.take_profit/100)
-                if new_order_close_price / next_close_price > 1 + self.config.grid_step/100:
+                if new_order_close_price / latest_close_price > 1:
                     return True
                 else:
                     return False

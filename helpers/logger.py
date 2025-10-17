@@ -13,9 +13,10 @@ from decimal import Decimal
 class TradingLogger:
     """Enhanced logging with structured output and error handling."""
 
-    def __init__(self, exchange: str, ticker: str, log_to_console: bool = False):
+    def __init__(self, exchange: str, ticker: str, id:int, log_to_console: bool = True):
         self.exchange = exchange
         self.ticker = ticker
+        self.id = id
         # Ensure logs directory exists at the project root
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         logs_dir = os.path.join(project_root, 'logs')
@@ -34,6 +35,7 @@ class TradingLogger:
         self.debug_log_file = os.path.join(logs_dir, debug_log_file_name)
         self.timezone = pytz.timezone(os.getenv('TIMEZONE', 'Asia/Shanghai'))
         self.logger = self._setup_logger(log_to_console)
+        self.logger.info(f"log initial success")
 
     def _setup_logger(self, log_to_console: bool) -> logging.Logger:
         """Setup the logger with proper configuration."""
@@ -83,7 +85,7 @@ class TradingLogger:
 
     def log(self, message: str, level: str = "INFO"):
         """Log a message with the specified level."""
-        formatted_message = f"[{self.exchange.upper()}_{self.ticker.upper()}] {message}"
+        formatted_message = f"[{self.exchange.upper()}_{self.id}_{self.ticker.upper()}] {message}"
         if level.upper() == "DEBUG":
             self.logger.debug(formatted_message)
         elif level.upper() == "INFO":

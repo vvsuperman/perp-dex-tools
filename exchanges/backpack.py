@@ -194,7 +194,7 @@ class BackpackClient(BaseExchangeClient):
         self.ws_manager.config = self.config
 
         # Initialize logger using the same format as helpers
-        self.logger = TradingLogger(exchange="backpack", ticker=self.config.ticker, log_to_console=False)
+        self.logger = TradingLogger(exchange="backpack", ticker=self.config.ticker,id=self.config.id, log_to_console=False)
         self.ws_manager.set_logger(self.logger)
 
         try:

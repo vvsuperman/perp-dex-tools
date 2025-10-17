@@ -130,7 +130,8 @@ async def main():
             PARADEX_L1_ADDRESS = key.get('PARADEX_L1_ADDRESS'),
             PARADEX_L2_ADDRESS = key.get('PARADEX_L2_ADDRESS'),
             PARADEX_L2_PRIVATE_KEY = key.get('PARADEX_L2_PRIVATE_KEY'),
-            boost_mode=False
+            id = key.get('id'),
+            boost_mode=False,
         )
        
         # Create and run the bot
