@@ -21,6 +21,55 @@ from exchanges.extended import ExtendedClient
 import websockets
 from datetime import datetime
 import pytz
+import random
+
+IO_WAIT_TIME = 60 # Base wait time for I/O operations
+
+
+import random
+from decimal import Decimal, getcontext
+
+
+def generate_random_with_precision(number):
+    """
+    更高级的 Decimal 版本，直接处理精度
+    """
+    if number == 0:
+        return Decimal('0')
+    
+    # 转换为 Decimal
+    if not isinstance(number, Decimal):
+        decimal_num = Decimal(str(number))
+    else:
+        decimal_num = number
+    
+    # 获取数字的元组表示
+    decimal_tuple = decimal_num.as_tuple()
+    
+    if decimal_tuple.exponent == 0:
+        # 整数情况
+        min_val = int(decimal_num)
+        max_val = int(2 * decimal_num)
+        return Decimal(random.randint(min_val, max_val))
+    else:
+        # 小数情况
+        # 计算缩放因子
+        scale_factor = 10 ** (-decimal_tuple.exponent)
+        
+        # 转换为整数进行计算
+        int_number = int(decimal_num * scale_factor)
+        
+        # 生成随机数范围
+        min_val = int_number
+        max_val = int(2 * decimal_num * scale_factor)
+        
+        # 生成随机整数
+        random_int = random.randint(min_val, max_val)
+        
+        # 转换回小数
+        random_decimal = Decimal(random_int) / scale_factor
+        
+        return random_decimal
 
 
 class Config:
@@ -33,7 +82,7 @@ class Config:
 class HedgeBot:
     """Trading bot that places post-only orders on Extended and hedges with market orders on Lighter."""
 
-    def __init__(self, ticker: str, order_quantity: Decimal, fill_timeout: int = 5, iterations: int = 20):
+    def __init__(self, ticker: str, order_quantity: Decimal, fill_timeout: int = 5, iterations: int = 100000000 , io_wait:int =60 , volume:int=100000000):
         self.ticker = ticker
         self.order_quantity = order_quantity
         self.fill_timeout = fill_timeout
@@ -42,6 +91,8 @@ class HedgeBot:
         self.extended_position = Decimal('0')
         self.lighter_position = Decimal('0')
         self.current_order = {}
+        self.io_wait = io_wait
+        self.volume = volume
 
         # Initialize logging to file
         os.makedirs("logs", exist_ok=True)
@@ -74,7 +125,7 @@ class HedgeBot:
 
         # Create different formatters for file and console
         file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        console_formatter = logging.Formatter('%(levelname)s:%(name)s:%(message)s')
+        console_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 
         file_handler.setFormatter(file_formatter)
         console_handler.setFormatter(console_formatter)
@@ -1099,13 +1150,17 @@ class HedgeBot:
         await asyncio.sleep(5)
 
         iterations = 0
-        while iterations < self.iterations and not self.stop_flag:
+        temp_volume =0
+        while temp_volume < self.volume and not self.stop_flag:
             iterations += 1
             self.logger.info("-----------------------------------------------")
             self.logger.info(f"🔄 Trading loop iteration {iterations}")
             self.logger.info("-----------------------------------------------")
 
-            self.logger.info(f"[STEP 1] Extended position: {self.extended_position} | Lighter position: {self.lighter_position}")
+            order_quantity = generate_random_with_precision(self.order_quantity)
+            temp_volume += order_quantity * self.current_lighter_price
+
+            self.logger.info(f"[STEP 1] Extended position: {self.extended_position} | Lighter position: {self.lighter_position} | order quantity: {order_quantity} ")
 
             if abs(self.extended_position + self.lighter_position) > 0.2:
                 self.logger.error(f"❌ Position diff is too large: {self.extended_position + self.lighter_position}")
@@ -1116,7 +1171,7 @@ class HedgeBot:
             try:
                 # Determine side based on some logic (for now, alternate)
                 side = 'buy'
-                await self.place_extended_post_only_order(side, self.order_quantity)
+                await self.place_extended_post_only_order(side, order_quantity)
             except Exception as e:
                 self.logger.error(f"⚠️ Error in trading loop: {e}")
                 self.logger.error(f"⚠️ Full traceback: {traceback.format_exc()}")
@@ -1128,7 +1183,7 @@ class HedgeBot:
                 if self.waiting_for_lighter_fill:
                     await self.place_lighter_market_order(
                         self.current_lighter_side,
-                        self.current_lighter_quantity,
+                        order_quantity,
                         self.current_lighter_price
                     )
                     break
@@ -1140,15 +1195,19 @@ class HedgeBot:
 
             if self.stop_flag:
                 break
+            
+            wait_time = self.io_wait + random.randint(10, 60)
+            await asyncio.sleep(wait_time)
+
 
             # Close position
-            self.logger.info(f"[STEP 2] Extended position: {self.extended_position} | Lighter position: {self.lighter_position}")
+            self.logger.info(f"..................[STEP 2] Extended position: {self.extended_position} | Lighter position: {self.lighter_position} | wait time: {wait_time}s | volume :{temp_volume} to close position......................")
             self.order_execution_complete = False
             self.waiting_for_lighter_fill = False
             try:
                 # Determine side based on some logic (for now, alternate)
                 side = 'sell'
-                await self.place_extended_post_only_order(side, self.order_quantity)
+                await self.place_extended_post_only_order(side, order_quantity)
             except Exception as e:
                 self.logger.error(f"⚠️ Error in trading loop: {e}")
                 self.logger.error(f"⚠️ Full traceback: {traceback.format_exc()}")
@@ -1159,7 +1218,7 @@ class HedgeBot:
                 if self.waiting_for_lighter_fill:
                     await self.place_lighter_market_order(
                         self.current_lighter_side,
-                        self.current_lighter_quantity,
+                        order_quantity,
                         self.current_lighter_price
                     )
                     break

@@ -32,7 +32,7 @@ def parse_arguments():
         epilog="""
 Examples:
     python hedge_mode.py --exchange backpack --ticker BTC --size 0.01 --iter 10
-    python hedge_mode.py --exchange extended --ticker ETH --size 0.1 --iter 5
+    python hedge_mode.py --exchange extended --ticker ETH --size 0.1 --iter 5  --io_wait 100
         """
     )
     
@@ -42,12 +42,16 @@ Examples:
                         help='Ticker symbol (default: BTC)')
     parser.add_argument('--size', type=str, required=True,
                         help='Number of tokens to buy/sell per order')
-    parser.add_argument('--iter', type=int, required=True,
+    parser.add_argument('--iter', type=int, default=1000000000,
                         help='Number of iterations to run')
     parser.add_argument('--fill-timeout', type=int, default=5,
                         help='Timeout in seconds for maker order fills (default: 5)')
     parser.add_argument('--env-file', type=str, default=".env",
                         help=".env file path (default: .env)")
+    parser.add_argument('--io_wait', type=int, default=60,
+                        help="wait time for close position")
+    parser.add_argument('--volume', type=int, default=100000000,
+                        help="volume ")
     
     return parser.parse_args()
 
@@ -98,7 +102,7 @@ async def main():
         sys.exit(1)
     
     print(f"Starting hedge mode for {args.exchange} exchange...")
-    print(f"Ticker: {args.ticker}, Size: {args.size}, Iterations: {args.iter}")
+    print(f"Ticker: {args.ticker}, Size: {args.size}, Iterations: {args.iter},io_wait: {args.io_wait}   ")
     print("-" * 50)
     
     try:
@@ -108,14 +112,16 @@ async def main():
                 ticker=args.ticker.upper(),
                 order_quantity=Decimal(args.size),
                 fill_timeout=args.fill_timeout,
-                iterations=args.iter
+                iterations=args.iter,
+                io_wait=int(args.io_wait)
             )
         else:  # extended
             bot = HedgeBotClass(
                 ticker=args.ticker.upper(),
                 order_quantity=Decimal(args.size),
                 fill_timeout=args.fill_timeout,
-                iterations=args.iter
+                iterations=args.iter,
+                io_wait=int(args.io_wait)
             )
         
         # Run the bot
