@@ -1158,7 +1158,7 @@ class HedgeBot:
             self.logger.info("-----------------------------------------------")
 
             order_quantity = generate_random_with_precision(self.order_quantity)
-            temp_volume += order_quantity * self.current_lighter_price
+            temp_volume += order_quantity * 110000
 
             self.logger.info(f"[STEP 1] Extended position: {self.extended_position} | Lighter position: {self.lighter_position} | order quantity: {order_quantity} ")
 
@@ -1201,7 +1201,7 @@ class HedgeBot:
 
 
             # Close position
-            self.logger.info(f"..................[STEP 2] Extended position: {self.extended_position} | Lighter position: {self.lighter_position} | wait time: {wait_time}s | volume :{temp_volume} to close position......................")
+            self.logger.info(f"[STEP 2] Extended position: {self.extended_position} | Lighter position: {self.lighter_position} | wait time: {wait_time}s | volume :{temp_volume} to close position......................")
             self.order_execution_complete = False
             self.waiting_for_lighter_fill = False
             try:
