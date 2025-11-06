@@ -1,137 +1,77 @@
-# {
-    #     "id":1,
-    #     "exchange": "lighter",
-    #     "API_KEY_PRIVATE_KEY":"7e1ba97039ee6d23393e7509b41b428033b9ba7277b93b53e5c24be17ee1bc7de0fb03a98cbe7579",
-    #     "API_KEY_PUBLIC_KEY":"29138c3dd999e1f26493db2d0e5145a9d0b7cda48a120f2e8e49fa029916128fdde17b243a8aa774",
-    #     "LIGHTER_ACCOUNT_INDEX":26045,
-    #     "LIGHTER_API_KEY_INDEX":2,
-    #     "ticker": "paxg",
-    #     "quantity": 0.02,
-    #     "take_profit": 0.02,
-    #     "max_orders": 20,
-    #     "wait_time": 450,
-    #     "grid_step": 0.3,
-    #     "direction":"buy"
-    # },
-    # {
-    #     "id":2,
-    #     "exchange": "lighter",
-    #     "API_KEY_PRIVATE_KEY":"2c79430fec7271d3a7c52709dda7b480ddcb7ba77cb07f9c3c70f7672fe55d38e1131881ee0aa26b",
-    #     "API_KEY_PUBLIC_KEY":"852539e24316af42935c3ccec0f34452c577e575585f19ff011b61970641452179a0cbaa0a668739",
-    #     "LIGHTER_ACCOUNT_INDEX":214897,
-    #     "LIGHTER_API_KEY_INDEX":3,
-    #     "ticker": "mnt",
-    #     "quantity": 10,
-    #     "take_profit": 0.02,
-    #     "max_orders": 20,
-    #     "wait_time": 450,
-    #     "grid_step": 0.2,
-    #     "direction":"buy"
-
-    # },
-    # {  "id":3,
-    #     "exchange": "lighter",
-    #     "API_KEY_PRIVATE_KEY":"77f9ce91052f1cafcae8e6405582f11e01bee05ad6cbef7aa6ccad28b7b1c7c42d1d3bcfe2a39967",
-    #     "API_KEY_PUBLIC_KEY":"d8cd9af05b6670e1cdce7871f16ef4314fa75fa6b31ed52dc5b624751502ab37be9bc335bf655b05",
-    #     "LIGHTER_ACCOUNT_INDEX":219298,
-    #     "LIGHTER_API_KEY_INDEX":3,
-    #     "ticker": "mnt",
-    #     "quantity": 10,
-    #     "take_profit": 0.02,
-    #     "max_orders": 20,
-    #     "wait_time": 450,
-    #     "grid_step": 0.2,
-    #     "direction":"buy"
-
-    # },
-    # {
-    #     "id":4,
-    #     "exchange": "lighter",
-    #     "API_KEY_PRIVATE_KEY":"fb2dc8a8c3f8b532e2c6c75943e1b272e718ac06030fb5a642d714ff7b0b8f55996e19de50a0fc76",
-    #     "API_KEY_PUBLIC_KEY":"dcc4130c168111f6622dc05b56a7a8edb0970fda001f4c4791bdad16a7c561f30639ae3f837faf4a",
-    #     "LIGHTER_ACCOUNT_INDEX":219265,
-    #     "LIGHTER_API_KEY_INDEX":3,
-    #     "ticker": "paxg",
-    #     "quantity": 0.01,
-    #     "take_profit": 0.02,
-    #     "max_orders": 10,
-    #     "wait_time": 450,
-    #     "grid_step": 0.2,
-    #     "direction":"buy"
-
-    # },
-    #  {  "id":5,
-    #     "exchange": "lighter",
-    #     "API_KEY_PRIVATE_KEY":"ef722fe504941c39bda176df05d15c53a23c1a9d8bed120bec602e576ae767a76319decdeb6c6a79",
-    #     "API_KEY_PUBLIC_KEY":"8ad3db1c61e8004a5ad4cc87f3775bd6e508044f8e8bedebc11e90a6f5d072b91788bb9921439a98",
-    #     "LIGHTER_ACCOUNT_INDEX":245286,
-    #     "LIGHTER_API_KEY_INDEX":3,
-    #     "ticker": "paxg",
-    #     "quantity": 0.02,
-    #     "take_profit": 0.02,
-    #     "max_orders": 20,
-    #     "wait_time": 450,
-    #     "grid_step": 0.2,
-    #     "direction":"buy"
-    # },
-
-    #  {  "id":6,
-    #     "exchange": "lighter",
-    #     "API_KEY_PRIVATE_KEY":"e0793e797ac2574288d05477dd92a67165bbb25ec4ce4d666e672153ca77f75add36a10a634c6569",
-    #     "API_KEY_PUBLIC_KEY":"022e8c219c60cb7101b9f7da185d07c476946ceed63f47508b9d413f33fe220767f1c970f6621ff6",
-    #     "LIGHTER_ACCOUNT_INDEX":245289,
-    #     "LIGHTER_API_KEY_INDEX":3,
-    #     "ticker": "paxg",
-    #     "quantity": 0.02,
-    #     "take_profit": 0.02,
-    #     "max_orders": 20,
-    #     "wait_time": 450,
-    #     "grid_step": 0.2,
-    #     "direction":"buy"
-    # },
-
-    #  {  "id":7,
-    #     "exchange": "lighter",
-    #     "API_KEY_PRIVATE_KEY":"67074cce93b72621173dabb63152cb37411c515a358d415ac993e24802c69c1b8c79d8209748453c",
-    #     "API_KEY_PUBLIC_KEY":"d53eb60e4360af5a0d044e9a9321a03c9a20b3f54bd070cfd163ad1c4a828eed7298bd58d96f2de0",
-    #     "LIGHTER_ACCOUNT_INDEX":245314,
-    #     "LIGHTER_API_KEY_INDEX":3,
-    #     "ticker": "paxg",
-    #     "quantity": 0.02,
-    #     "take_profit": 0.02,
-    #     "max_orders": 20,
-    #     "wait_time": 450,
-    #     "grid_step": 0.2,
-    #     "direction":"buy"
-    # },
+BASE_URL = "https://mainnet.zklighter.elliot.ai"
+# 杠杆倍数，总仓位min(balance1, balance2) * MULTIPLIER_QUANTITY 
+MULTIPLIER_QUANTITY = 5
+# 10倍杠杆，0.09可能就被清算了
+SL=0.08  # 止损比例
+TP=0.08  # 止盈比例
 
 
-    # {  "id":8,
-    #     "exchange": "lighter",
-    #     "API_KEY_PRIVATE_KEY":"3b97bb9085cf58e6ab1dec930b971314d531da47c41a704a92349a69d9884f595ce9fcd1c1367d79",
-    #     "API_KEY_PUBLIC_KEY":"5af92d707a2e4db0f0deef7ca1171245506053605fd1158e61b0c9db954d65b167b007b47a73cbd2",
-    #     "LIGHTER_ACCOUNT_INDEX":245320,
-    #     "LIGHTER_API_KEY_INDEX":3,
-    #     "ticker": "paxg",
-    #     "quantity": 0.02,
-    #     "take_profit": 0.02,
-    #     "max_orders": 20,
-    #     "wait_time": 450,
-    #     "grid_step": 0.2,
-    #     "direction":"buy"
-    # },
+# 两次交易间隔时间
+HEDGE_INTERVAL_SECONDS = 3600
+
+# random symbols 
+#HEDGE_SYMBOLS = ["PAXG","ASTER","MNT","PENDLE"]
+HEDGE_SYMBOLS = ["BTC","ETH"]
+#HEDGE_SYMBOLS = ["PAXG"]
+
+# 告警地址
+WEBHOOK_URL = "https://oapi.dingtalk.com/robot/send?access_token=7b588bb6ca84b8b7e8ff97af90021a12ac2c56e96e75670201318ab313779459"
+
+
+# random symbols 
+KEYS =[
+
+
+     {  "id":'lumao30',
+        "exchange": "lighter",
+        "API_KEY_PRIVATE_KEY":"03690f3c693e785669ed0b015bb000e1ed0da5cd207e81ad4079ff0547a1e7fcaf00fb07de81315f",
+        "API_KEY_PUBLIC_KEY":"879c42f444098c7486e8e7671d8bd6c813aa211639f48709918fd7ba5b2b39cc16d56774ce651b14",
+        "LIGHTER_ACCOUNT_INDEX":349654,
+        "LIGHTER_API_KEY_INDEX":3
+    },
+
+
+     {  "id":'lumao31',
+        "exchange": "lighter",
+        "API_KEY_PRIVATE_KEY":"a0558ff499394313cc32570ebe3f7d57010e33da641777fab842c56d42dc0b3fe93880d2047a431a",
+        "API_KEY_PUBLIC_KEY":"ad776b108b18327faf9349defe4544643a179ff406bc53f49bb2b4349a38017c5b47497d3595bf80",
+        "LIGHTER_ACCOUNT_INDEX":349706,
+        "LIGHTER_API_KEY_INDEX":3
+    },
+
+
+    {  "id":"lumao32",
+        "exchange": "lighter",
+        "API_KEY_PRIVATE_KEY":"4e594d91b7ea775c44f4dec0803af91020481e103a424546c4d3eb507e6634d426cc226ccee3fa33",
+        "API_KEY_PUBLIC_KEY":"f5b0a557f579373ad9e02530cce6cd1d8178d17072a11fc5b0f3a454d3877f785ac38a4cf523a4ad",
+        "LIGHTER_ACCOUNT_INDEX":349685,
+        "LIGHTER_API_KEY_INDEX":3,
+    },
     
-    # {  "id":9,
-    #     "exchange": "lighter",
-    #     "API_KEY_PRIVATE_KEY":"6389f49ec8e099b80a7c3bcad042be0d0430e2daf3b043c2621fb21a61b64eb3d1c798113987ad5a",
-    #     "API_KEY_PUBLIC_KEY":"400527a3e45db63fcf6a9a3b02d763f8fdb4e569f96b8b85072f9cbd300f4fa116a1807e0223fc9d",
-    #     "LIGHTER_ACCOUNT_INDEX":245324,
-    #     "LIGHTER_API_KEY_INDEX":3,
-    #     "ticker": "paxg",
-    #     "quantity": 0.02,
-    #     "take_profit": 0.02,
-    #     "max_orders": 20,
-    #     "wait_time": 450,
-    #     "grid_step": 0.2,
-    #     "direction":"buy"
-    # }
+    {  "id":"lumao33",
+        "exchange": "lighter",
+        "API_KEY_PRIVATE_KEY":"956ce73da96039f59723712e01cbe8c111c17887f2bd60923ed960eca46a441e9f53898851b6536d",
+        "API_KEY_PUBLIC_KEY":"afce30f7f7be5a5fd7fa13447b75f5ee3c7548afb64ae776c680b747c7c8f1d348efee97973739ad",
+        "LIGHTER_ACCOUNT_INDEX":349740,
+        "LIGHTER_API_KEY_INDEX":3
+    },
+    {  
+        "id":"lumao34",
+        "exchange": "lighter",
+        "API_KEY_PRIVATE_KEY":"31872bffa45e68723408c50a777cdeb0daaf37c2082705358cbe6644b0b8e00e911b5a0e4d164c2c",
+        "API_KEY_PUBLIC_KEY":"ad4a5aaf1fe9f907aafb75a5909f6fdc426e0a6ccf7f28c035c0b4f4232a95654c5b17b4357cd211",
+        "LIGHTER_ACCOUNT_INDEX":349731,
+        "LIGHTER_API_KEY_INDEX":3
+    
+    },
+    { 
+        "id":"lumao35",
+        "exchange": "lighter",
+        "API_KEY_PRIVATE_KEY":"a76b5d117471e6ed25490dc72ca0834a0c4c59e94fc2c294d653f786a7837dda91774d8341692329",
+        "API_KEY_PUBLIC_KEY":"3435fcf72816b8892a181f18ae861577dfb571dadbe638639f06478d6de0bf5def91f19ce7cb8ce6",
+        "LIGHTER_ACCOUNT_INDEX":355827,
+        "LIGHTER_API_KEY_INDEX":3
+    
+    },
+
+]

@@ -9,7 +9,7 @@ import logging
 from decimal import Decimal
 from typing import Dict, Any, List, Optional, Tuple
 
-from .base import BaseExchangeClient, OrderResult, OrderInfo, query_retry
+from base import BaseExchangeClient, OrderResult, OrderInfo, query_retry
 from helpers.logger import TradingLogger
 
 # Import official Lighter SDK for API client

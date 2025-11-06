@@ -1,0 +1,5 @@
+.position-long { color: green; font-weight: bold; }
+.position-short { color: red; font-weight: bold; }
+.pnl-positive { color: green; }
+.pnl-negative { color: red; }
+.table th { background-color: #f8f9fa; }

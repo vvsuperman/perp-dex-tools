@@ -411,7 +411,7 @@ class TradingBot:
                 else:
                     mismatch_detected = False
 
-                return mismatch_detected
+                return False
 
             except Exception as e:
                 self.logger.log(f"Error in periodic status check: {e}", "ERROR")

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>Lighter 监控</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/style.css" rel="stylesheet">
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <!-- Bootstrap JS 用于 Collapse -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body class="bg-light">
+<div class="container py-4">
+  <h1 class="mb-4 text-center">Lighter 账户监控</h1>
+
+  <!-- 时间筛选表单 -->
+  <form id="dateForm" class="row g-3 align-items-end justify-content-center mb-3"
+        hx-get="/api/accounts"
+        hx-target="#accounts-table"
+        hx-swap="innerHTML"
+        hx-include="#startDate, #endDate">
+    <div class="col-auto">
+      <label class="form-label mb-1">开始日期</label>
+      <input type="date" class="form-control form-control-sm" id="startDate" name="start">
+    </div>
+    <div class="col-auto">
+      <label class="form-label mb-1">结束日期</label>
+      <input type="date" class="form-control form-control-sm" id="endDate" name="end">
+    </div>
+    <div class=" ejecutivo col-auto">
+      <button type="submit" class="btn btn-primary btn-sm">查询</button>
+      <button type="button" class="btn btn-outline-secondary btn-sm ms-2"
+              onclick="document.getElementById('startDate').value=''; document.getElementById('endDate').value=''; this.form.requestSubmit();">
+        清除
+      </button>
+    </div>
+  </form>
+
+  <div class="text-center text-muted mb-3">
+    最后更新: <span id="last-update">加载中...</span>
+    <button class="btn btn-sm btn-primary ms-3"
+            hx-get="/api/accounts"
+            hx-target="#accounts-table"
+            hx-swap="innerHTML"
+            hx-include="#startDate, #endDate">
+      刷新
+    </button>
+  </div>
+
+  <div id="accounts-table"
+       hx-get="/api/accounts"
+       hx-trigger="load, every 600s"
+       hx-swap="innerHTML"
+       hx-include="#startDate, #endDate">
+    加载中...
+  </div>
+</div>
+
+<script>
+  // HTMX 每次请求都会自动带上 start / end 的值（通过 hx-include）
+  // 刷新按钮和自动轮询也会带上当前日期
+
+  document.body.addEventListener('htmx:afterSwap', (e) => {
+    if (e.detail.target.id === 'accounts-table') {
+      document.getElementById('last-update').textContent = new Date().toLocaleString('zh-CN');
+    }
+  });
+
+  // 可选：页面加载时如果 URL 有 ?start=...&end=...，自动填入输入框
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(location.search);
+    if (params.has('start')) document.getElementById('startDate').value = params.get('start');
+    if (params.has('end'))   document.getElementById('endDate').value   = params.get('end');
+  });
+</script>
+</body>
+</html>

@@ -14,7 +14,7 @@ def query_retry(
     default_return: Any = None,
     exception_type: Union[Type[Exception], Tuple[Type[Exception], ...]] = (Exception,),
     max_attempts: int = 5,
-    min_wait: float = 1,
+    min_wait: float = 5,
     max_wait: float = 10,
     reraise: bool = False
 ):
